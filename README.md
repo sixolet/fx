@@ -1,0 +1,1 @@
+Norns framework for arbitrary & flexible supercollider send & insert effects.
