@@ -34,6 +34,9 @@ FxSetup {
             sendA = Bus.audio(Server.default, numChannels: 2);
             sendB = Bus.audio(Server.default, numChannels: 2);
             wet = Bus.audio(Server.default, numChannels: 2);
+            SynthDef(\replacer, {|in, out, drywet|
+                XOut.ar(out, drywet, In.ar(in, 2));
+            }).add;
             ~sendA = sendA;
             ~sendB = sendB;
             OSCFunc.new({ |msg, time, addr, recvPort|

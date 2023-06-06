@@ -1,14 +1,10 @@
 // Base class for fx
 
 FxBase {
-    var <syn, <slot, <params;
+    var <syn, <slot, <params, <replacer, <drywet;
 
     addSynthdefs {
         // Virtual. Override me.
-    }
-
-    *dynamicInit {
-
     }
 
     // Virtual. Override me.
@@ -27,6 +23,7 @@ FxBase {
             "considering slot % as opposed to %\n".postf(newSlot, slot);
             if ((newSlot != slot), {
                 syn.free;
+                replacer.free;
                 "freeing".postln;
                 switch (newSlot)
                 {\none} {
@@ -52,6 +49,17 @@ FxBase {
                     "b".postln;
                 }
                 {\insert} {
+                    if ( FxSetup.insertGroup != nil, {
+                        replacer = Synth.new(\replacer, [
+                            \in, FxSetup.wet,
+                            \out, Server.default.outputBus,
+                            \drywet, drywet,
+                        ], target: FxSetup.insertGroup, addAction: \addToTail);
+                        syn = Synth.new(this.symbol, [
+                            \inBus, Server.default.outputBus,
+                            \outBus, FxSetup.wet,
+                            ] ++ params.asPairs, target: FxSetup.insertGroup, addAction: \addToHead);
+                    });                    
                 }
             });
             slot = newSlot;
@@ -62,6 +70,9 @@ FxBase {
             params[key] = value;
             if (syn != nil, {
                 syn.set(key, value);
+            });
+            if ((replacer != nil) && (key == \drywet), {
+                replacer.set(\drywet, value);
             });
         }, this.subPath ++ "/set");        
     }
