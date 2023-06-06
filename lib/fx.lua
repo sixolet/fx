@@ -40,6 +40,7 @@ function Fx:add_slot(id, name)
         else
             params:hide(id.."_drywet")
         end
+       -- print("send slot", self.subpath.."/slot", Fx.slot_symbols[val])
         osc.send({ "localhost", 57120 }, self.subpath.."/slot", {Fx.slot_symbols[val]})
         _menu.rebuild_params()
     end)

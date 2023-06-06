@@ -24,7 +24,7 @@ FxSetup {
 
     *register { |p|
         "register % initOnce is %\n".postf(p, initOnce);
-        plugins.add(p);
+        plugins = plugins.add(p);
     }
 
     *initClass {
@@ -51,6 +51,7 @@ FxSetup {
                 initOnce = true;
                 "INIT THIS ONCE YO".postln;
                 plugins.do { |p|
+                    "Installing %\n".postf(p);
                     p.addSynthdefs;
                     p.listenOSC;
                 };
