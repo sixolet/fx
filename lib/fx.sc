@@ -71,8 +71,11 @@ FxBase {
             if (syn != nil, {
                 syn.set(key, value);
             });
-            if ((replacer != nil) && (key == \drywet), {
-                replacer.set(\drywet, value);
+            if (key == \drywet, {
+                drywet = value;
+                if (replacer != nil, {
+                    replacer.set(\drywet, drywet);
+                });
             });
         }, this.subPath ++ "/set");        
     }
