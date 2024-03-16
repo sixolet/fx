@@ -40,7 +40,7 @@ end
 
 function Fx:add_slot(id, name)
     params:add_option(id, name, {"none", "send a", "send b", "insert"}, 1)
-    self:add_control(id.."_drywet", "dry/wet", "drywet", controlspec.new(0, 1, 'lin', 0, 1, 0))
+    self:add_control(id.."_drywet", "dry/wet", "drywet", controlspec.new(0, 1, 'lin', 0, 1))
     params:set_action(id, function(val)
         if val == 4 then
             params:show(id.."_drywet")
