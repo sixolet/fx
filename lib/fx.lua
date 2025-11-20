@@ -38,6 +38,13 @@ function Fx:add_option(id, name, key, options, default)
     end)
 end
 
+function Fx:add_binary(id, name, key, behavior, default)
+    params:add_binary(id, name, behavior, default)
+    params:set_action(id, function(val)
+        osc.send({ "localhost", 57120 }, self.subpath.."/set", {key, val})
+    end)
+end
+
 function Fx:add_slot(id, name)
     params:add_option(id, name, {"none", "send a", "send b", "insert"}, 1)
     self:add_control(id.."_drywet", "dry/wet", "drywet", controlspec.new(0, 1, 'lin', 0, 1))
