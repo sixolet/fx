@@ -1,61 +1,72 @@
 FxSetup {
-    classvar <sendA, <sendB, <wet, <fxGroup, <sendAGroup, <sendBGroup, <insertGroup, <plugins, <initOnce;
-    *dynamicInit {
-        if(fxGroup == nil, {
-            fxGroup = Group.new(Server.default, addAction: \addToTail);
-            sendAGroup = Group.new(fxGroup, addAction: \addToTail);
-            sendBGroup = Group.new(fxGroup, addAction: \addToTail);
-            insertGroup = Group.new(fxGroup, addAction: \addToTail);
-            ~sendAGroup = sendAGroup;
-            ~sendBGroup = sendBGroup;
-            ~insertGroup = insertGroup;
-        });
-    }
-    *dynamicCleanup {
-        fxGroup.free;
-        fxGroup = nil;
-        sendAGroup = nil;
-        sendBGroup = nil;
-        insertGroup = nil;
-        ~sendAGroup = sendAGroup;
-        ~sendBGroup = sendBGroup;
-        ~insertGroup = insertGroup;        
-    }
+    classvar <sendA, <sendB, <wet, <fxGroup, <sendGroup, <insertGroup, plugins, initOnce;
 
-    *register { |p|
-        "register % initOnce is %\n".postf(p, initOnce);
-        plugins = plugins.add(p);
-    }
-
-    *initClass {
-        initOnce = false;
-        plugins = [];
-        StartUp.add {
+    *alloc {
+        if(initOnce.isNil, {
+            initOnce = true;
             sendA = Bus.audio(Server.default, numChannels: 2);
             sendB = Bus.audio(Server.default, numChannels: 2);
             wet = Bus.audio(Server.default, numChannels: 2);
-            SynthDef(\replacer, {|in, out, drywet|
-                XOut.ar(out, drywet, In.ar(in, 2));
-            }).add;
             ~sendA = sendA;
             ~sendB = sendB;
+			"INIT THIS ONCE YO".postln;
+        })
+    }
+
+    *dynamicInit {
+        if(fxGroup.isNil, {
+            fxGroup = Group.new(Server.default, \addToTail);
+            insertGroup = Group.new(fxGroup);
+            sendGroup = Group.new(fxGroup);
+			"FX setup complete".postln;
+        })
+    }
+
+    *dynamicCleanup {
+        if(fxGroup.notNil, {
+            fxGroup.free;
+            fxGroup = nil;
+            sendGroup = nil;
+            insertGroup = nil;
+			"FX cleanup complete".postln;
+        })
+    }
+
+    *register { |p|
+        plugins = plugins.add(p);
+        "registered: %\n".postf(p.class.name);
+    }
+
+    *initClass {
+
+        plugins = [];
+
+        StartUp.add {
+
+            OSCFunc.new({ |msg, time, addr, recvPort|
+                FxSetup.alloc;
+            }, "/fxmod/alloc");
+
             OSCFunc.new({ |msg, time, addr, recvPort|
                 FxSetup.dynamicInit;
-                "FX setup complete".postln;
             }, "/fxmod/init");
+
             OSCFunc.new({ |msg, time, addr, recvPort|
                 FxSetup.dynamicCleanup;
-                "FX cleanup complete".postln;
-            }, "/fxmod/cleanup");      
-            if (initOnce.not, {
-                initOnce = true;
-                "INIT THIS ONCE YO".postln;
-                plugins.do { |p|
-                    "Installing %\n".postf(p);
-                    p.addSynthdefs;
-                    p.listenOSC;
-                };
-            });                  
-        };
+            }, "/fxmod/cleanup");
+
+            SynthDef(\FxReplacer, {|inBus, outBus, drywet|
+				XOut.ar(outBus, drywet, In.ar(inBus, 2));
+				ReplaceOut.ar(inBus, Silent.ar(2));
+			}).add;
+
+			plugins.do { |p|
+				"installing: %\n".postf(p.class.name);
+				p.addSynthdefs;
+				p.listenOSC;
+			};
+
+        }
     }
+
 }
